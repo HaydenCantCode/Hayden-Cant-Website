@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Latency Demo   </title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #ffffff;
+      color: #1a1a1a;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #f5f5f3;
+      border-bottom: 0.5px solid rgba(0,0,0,0.15);
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 500;
+      width: 100%;
+    }
+
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: 30%;
+      border-right: 0.5px solid rgba(0,0,0,0.15);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #sidebar p {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .test-btn {
+      width: 100%;
+      padding: 9px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 0.5px solid rgba(0,0,0,0.2);
+      background: #ffffff;
+      color: #555;
+      cursor: default;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .test-btn.active {
+      cursor: pointer;
+      background: #ffffff;
+      color: #1a1a1a;
+      border-color: rgba(0,0,0,0.3);
+    }
+
+    .test-btn.active:hover {
+      background: #f5f5f3;
+    }
+
+    .test-btn.inactive {
+      background: #f5f5f3;
+      color: #aaa;
+      border-color: rgba(0,0,0,0.1);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .test-btn.active .dot { background: #1D9E75; }
+    .test-btn.inactive .dot { background: rgba(0,0,0,0.1); }
+
+    .delay-tag {
+      margin-left: auto;
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    #content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #response-panel {
+      flex: 1;
+      border-bottom: 0.5px solid rgba(0,0,0,0.15);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+
+    #response-box {
+      flex: 1;
+      background: #f5f5f3;
+      border-radius: 8px;
+      border: 0.5px solid rgba(0,0,0,0.1);
+      padding: 14px;
+      font-size: 13px;
+      color: #888;
+      line-height: 1.6;
+      min-height: 160px;
+    }
+
+    #response-text {
+      color: #1a1a1a;
+    }
+
+    #spinner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    .spinner-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .spinner-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #aaa;
+      animation: bounce 1s infinite;
+    }
+
+    .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+      40%            { opacity: 1;   transform: scale(1); }
+    }
+
+    #request-panel {
+      padding: 14px 16px;
+      background: #ffffff;
+    }
+
+    #request-panel .panel-label {
+      margin-bottom: 10px;
+    }
+
+    .prompt-btn {
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 7px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 0.5px solid rgba(0,0,0,0.2);
+      background: #ffffff;
+      color: #1a1a1a;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    .prompt-btn:last-child { margin-bottom: 0; }
+    .prompt-btn:hover { background: #f5f5f3; }
+    .prompt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #active-mode {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Latency Demo</header>
+
+  <div id="main">
+    <div id="sidebar">
+      <p>Select latency mode</p>
+      <button class="test-btn inactive" id="btn-t1" onclick="selectTest(1)">
+        <span class="dot"></span> Test 1
+      </button>
+      <button class="test-btn active" id="btn-t2" onclick="selectTest(2)">
+        <span class="dot"></span> Test 2
+      </button>
+      <button class="test-btn active" id="btn-t3" onclick="selectTest(3)">
+        <span class="dot"></span> Test 3
+      </button>
+      <div id="active-mode">Active: <strong>Test 1</strong></div>
+    </div>
+
+    <div id="content">
+      <div id="response-panel">
+        <div class="panel-label">Response</div>
+        <div id="response-box">
+          <div id="spinner">
+            <div class="spinner-dots"><span></span><span></span><span></span></div>
+            <span id="spinner-label">Waiting...</span>
+          </div>
+          <div id="response-text" style="color: #aaa;">Select a question below to see the response here.</div>
+        </div>
+      </div>
+
+      <div id="request-panel">
+        <div class="panel-label">Requests</div>
+        <button class="prompt-btn" onclick="askQuestion(0)">Can you explain the difference between mitosis and meiosis?</button>
+        <button class="prompt-btn" onclick="askQuestion(1)">What are the main causes of World War I?</button>
+        <button class="prompt-btn" onclick="askQuestion(2)">How do I solve a quadratic equation using the quadratic formula?</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const responses = [
+      "Mitosis produces two genetically identical daughter cells and is used for growth and repair, while meiosis produces four genetically unique daughter cells and is used for sexual reproduction. Mitosis preserves the chromosome number (diploid), whereas meiosis halves it (haploid) to form gametes like sperm and eggs.",
+      "World War I was triggered by the assassination of Archduke Franz Ferdinand in 1914, but the deeper causes included militarism (the arms race among European powers), a web of alliances that pulled nations into conflict, imperialism competing for colonies, and rising nationalism — particularly in the Austro-Hungarian and Ottoman empires.",
+      "The quadratic formula is x = (−b ± √(b²−4ac)) / 2a, where a, b, and c are coefficients from the equation ax² + bx + c = 0. First identify a, b, and c, then substitute them into the formula. The ± means you get two possible solutions. If the value under the square root (the discriminant) is negative, the equation has no real solutions."
+    ];
+
+    const delays = { 1: 1, 2: 3000, 3: 9000 };
+    let activeTest = 1;
+    let pendingTimeout = null;
+
+    function selectTest(n) {
+      if (n === activeTest) return;
+      activeTest = n;
+      [1, 2, 3].forEach(i => {
+        const btn = document.getElementById('btn-t' + i);
+        btn.className = 'test-btn ' + (i === n ? 'inactive' : 'active');
+      });
+      document.getElementById('active-mode').innerHTML = 'Active: <strong>Test ' + n + '</strong>';
+    }
+
+    function askQuestion(idx) {
+      if (pendingTimeout) clearTimeout(pendingTimeout);
+      const btns = document.querySelectorAll('.prompt-btn');
+      btns.forEach(b => b.disabled = true);
+
+      const spinner = document.getElementById('spinner');
+      const responseText = document.getElementById('response-text');
+      const delay = delays[activeTest];
+      const label = delay < 100 ? 'Responding instantly...' : 'Thinking';
+
+      spinner.style.display = 'flex';
+      document.getElementById('spinner-label').textContent = label;
+      responseText.style.display = 'none';
+
+      pendingTimeout = setTimeout(() => {
+        spinner.style.display = 'none';
+        responseText.style.display = 'block';
+        responseText.style.color = '#1a1a1a';
+        responseText.textContent = responses[idx];
+        btns.forEach(b => b.disabled = false);
+      }, delay);
+    }
+  </script>
+
+</body>
+</html>
