@@ -203,37 +203,37 @@
 </head>
 <body>
 
-  <header>Latency Demo</header>
+  <header>Latency Demo 网络延迟演示</header>
 
   <div id="main">
     <div id="sidebar">
-      <p>Select latency mode</p>
+      <p>Select latency mode 選擇络延模式</p>
       <button class="test-btn inactive" id="btn-t1" onclick="selectTest(1)">
-        <span class="dot"></span> Test 1
+        <span class="dot"></span> Test 1 測試一
       </button>
       <button class="test-btn active" id="btn-t2" onclick="selectTest(2)">
-        <span class="dot"></span> Test 2
+        <span class="dot"></span> Test 2 測試二
       </button>
       <button class="test-btn active" id="btn-t3" onclick="selectTest(3)">
-        <span class="dot"></span> Test 3
+        <span class="dot"></span> Test 3 測試三
       </button>
       <div id="active-mode">Active: <strong>Test 1</strong></div>
     </div>
 
     <div id="content">
       <div id="response-panel">
-        <div class="panel-label">Response</div>
+        <div class="panel-label">Response 回應</div>
         <div id="response-box">
           <div id="spinner">
             <div class="spinner-dots"><span></span><span></span><span></span></div>
-            <span id="spinner-label">Waiting...</span>
+            <span id="spinner-label">Waiting 請稍等...</span>
           </div>
-          <div id="response-text" style="color: #aaa;">Select a question below to see the response here.</div>
+          <div id="response-text" style="color: #aaa;">Select a question below to see the response here. 选择下面的一个问题以在此查看回答。</div>
         </div>
       </div>
 
       <div id="request-panel">
-        <div class="panel-label">Requests</div>
+        <div class="panel-label">Questions 問題</div>
         <button class="prompt-btn" onclick="askQuestion(0)">Random Question 1</button>
         <button class="prompt-btn" onclick="askQuestion(1)">Random Question 2</button>
         <button class="prompt-btn" onclick="askQuestion(2)">Random Question 3</button>
@@ -270,7 +270,7 @@
       const spinner = document.getElementById('spinner');
       const responseText = document.getElementById('response-text');
       const delay = delays[activeTest];
-      const label = delay < 100 ? 'Responding instantly...' : 'Thinking';
+      const label = delay < 100 ? 'Responding instantly...' : 'Thinking 思考';
 
       spinner.style.display = 'flex';
       document.getElementById('spinner-label').textContent = label;
