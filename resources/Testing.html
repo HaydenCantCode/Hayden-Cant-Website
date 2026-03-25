@@ -217,7 +217,7 @@
       <button class="test-btn active" id="btn-t3" onclick="selectTest(3)">
         <span class="dot"></span> Test 3 測試三
       </button>
-      <div id="active-mode">Active 已激活: <strong>Test 1 測試一</strong></div>
+      <div id="active-mode">Active 已激活: <strong>Test 1</strong></div>
     </div>
 
     <div id="content">
@@ -259,7 +259,7 @@
         const btn = document.getElementById('btn-t' + i);
         btn.className = 'test-btn ' + (i === n ? 'inactive' : 'active');
       });
-      document.getElementById('active-mode').innerHTML = 'Active: <strong>Test ' + n + '</strong>';
+      document.getElementById('active-mode').innerHTML = 'Active 已激活: <strong>Test ' + n + '</strong>';
     }
 
     function askQuestion(idx) {
