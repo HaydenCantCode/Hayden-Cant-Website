@@ -131,6 +131,7 @@
       color: #888;
       line-height: 1.6;
       min-height: 160px;
+      overflow-y: auto;
     }
 
     #response-text {
@@ -235,49 +236,94 @@
       <div id="request-panel">
         <div class="panel-label">Questions 問題</div>
         <button class="prompt-btn" onclick="askQuestion(0)">What are Shakespeare's least famous plays? 莎士比亞最不知名的劇作有哪些?</button>
-        <button class="prompt-btn" onclick="askQuestion(1)">Random Question 2</button>
-        <button class="prompt-btn" onclick="askQuestion(2)">Random Question 3</button>
+        <button class="prompt-btn" onclick="askQuestion(1)">What are the 3 top selling books in Taiwan of all time? 台灣歷史上銷量最高的三本書是哪些？</button>
+        <button class="prompt-btn" onclick="askQuestion(2)">What countries have the longest lasting political systems? 哪些國家的政治制度持續時間最長？</button>
       </div>
     </div>
   </div>
 
   <script>
     const responses = [
-      `
-Shakespeare’s Least Famous Plays<br>
-莎士比亞最不知名的劇作<br><br>
+      `Shakespeare's Least Famous Plays 莎士比亞最不知名的劇作
 
-<b>Comedies</b><br>
-喜劇<br>
-- The Two Gentlemen of Verona – 維羅納的兩位紳士<br>
-- The Merry Wives of Windsor – 溫莎的快活妻子<br>
-- Love’s Labour’s Lost – 愛的徒勞<br><br>
+Comedies 喜劇
+• The Two Gentlemen of Verona – 維羅納的兩位紳士
+• The Merry Wives of Windsor – 溫莎的快活妻子
+• Love's Labour's Lost – 愛的徒勞
 
-<b>Histories</b><br>
-歷史劇<br>
-- King John – 約翰王<br>
-- Henry VI, Part 1 – 亨利六世 第一部<br>
-- Henry VI, Part 2 – 亨利六世 第二部<br>
-- Henry VI, Part 3 – 亨利六世 第三部<br>
-- Henry VIII – 亨利八世<br><br>
+Histories 歷史劇
+• King John – 約翰王
+• Henry VI, Part 1 – 亨利六世 第一部
+• Henry VI, Part 2 – 亨利六世 第二部
+• Henry VI, Part 3 – 亨利六世 第三部
+• Henry VIII – 亨利八世
 
-<b>Tragedies / Dark Plays</b><br>
-悲劇 / 陰暗劇<br>
-- Timon of Athens – 雅典的提蒙<br>
-- Coriolanus – 科里奧蘭納斯<br>
-- Troilus and Cressida – 特洛伊羅斯與克瑞西達<br><br>
+Tragedies / Dark Plays 悲劇 / 陰暗劇
+• Timon of Athens – 雅典的提蒙
+• Coriolanus – 科里奧蘭納斯
+• Troilus and Cressida – 特洛伊羅斯與克瑞西達
 
-<b>Late Romances</b><br>
-晚期浪漫劇<br>
-- Cymbeline – 辛白林<br>
-- Pericles, Prince of Tyre – 泰爾王子佩里克利斯<br>
-- The Two Noble Kinsmen – 高貴的兩位親戚
-`,
-      "Random Question 2 Answer",
-      "Random Question 3 Answer"
+Late Romances 晚期浪漫劇
+• Cymbeline – 辛白林
+• Pericles, Prince of Tyre – 泰爾王子佩里克利斯
+• The Two Noble Kinsmen – 高貴的兩位親戚`,
+
+      `Reliable data on the all‑time top selling books specifically in Taiwan (i.e., cumulative sales over decades) is not officially published in a comprehensive ranked list by Taiwanese publishers or industry trackers.
+可靠的關於台灣歷年最暢銷書（即數十年累計銷量）的完整官方排名資料，台灣的出版社或業界追蹤機構並未正式發表。
+
+However, from historical coverage and publishing accounts, a few titles are widely regarded as among the most sold or culturally impactful in Taiwan's book market historically:
+然而，根據歷史報導與出版紀錄，有幾本書在台灣書市中被廣泛認為是銷量最高或具文化影響力的作品：
+
+📚 Likely Among Taiwan's Best‑Selling Books of All Time
+📚 可能位列台灣歷史最暢銷書的書籍
+
+《撒哈拉的故事》 (Stories of the Sahara) – 三毛 (Sanmao)
+– A semi‑autobiographical travel/memoir work by Taiwanese author Sanmao that became a modern classic and sold millions of copies in Taiwan and Chinese‑language markets.
+– 台灣作家三毛的半自傳體旅行/散文作品，成為現代經典，在台灣及華語市場銷量達數百萬冊。
+
+《雨季不再來》 (Gone with the Rainy Season) – 三毛 (Sanmao)
+– Another long‑selling collection by Sanmao whose early writings have endured in popularity and contribute to her overall high cumulative sales.
+– 三毛的另一部長銷作品，其早期著作長期受到讀者喜愛，累積銷量也很可觀。
+
+《哈利波特》系列 (Harry Potter series) – J.K. Rowling
+– Not Taiwan‑authored, but the Harry Potter books have repeatedly topped bestseller lists in Taiwan since the late 1990s and are considered among the highest‑selling foreign book titles in the market over time.
+– 雖非台灣作家作品，但《哈利波特》自1990年代末以來多次登上台灣暢銷書榜，被視為台灣歷年最暢銷的外國書籍之一。`,
+
+      `When we talk about longest-lasting political systems, we usually mean countries where the form of government, constitution, or ruling institutions have remained stable for centuries. This can refer to monarchies, republics, or other governance structures. Here are some notable examples:
+當我們談論最長久的政治制度時，通常指的是那些政府形式、憲法或統治機構數百年來保持穩定的國家。這可以指君主制、共和制或其他治理結構。以下是一些著名的例子：
+
+1. San Marino
+   • System: Republic 制度：共和國
+   • Established: 301 AD 成立時間：公元301年
+   • Notes: Often considered the world's oldest surviving republic. Its government structure—a council-based system—has existed with remarkable continuity. 說明：常被認為是世界上最古老的現存共和國。其政府結構——基於議會的制度——已持續存在，且延續性極高。
+
+2. United Kingdom
+   • System: Constitutional monarchy with parliamentary democracy 制度：君主立憲制與議會民主
+   • Key Dates: Monarchy traceable to 9th–10th century; Parliament evolved since 13th century 重要年份：君主制可追溯至9–10世紀；議會自13世紀起逐步演變
+   • Notes: The monarchy has persisted for over a millennium, and parliamentary institutions have evolved without interruption. 說明：君主制度延續超過千年，議會制度演變過程中未曾中斷。
+
+3. Japan
+   • System: Constitutional monarchy (Emperor as head of state) 制度：君主立憲制（天皇為國家元首）
+   • Established: Emperor lineage traced to 660 BC (traditional); modern constitutional monarchy established 1889 成立時間：天皇世系可追溯至公元前660年（傳統說法）；現代君主立憲制於1889年建立
+   • Notes: Japan has the world's oldest continuing hereditary monarchy. Even after modernization and constitutional changes, the imperial system remains unbroken. 說明：日本擁有世界上最古老且持續的世襲君主制度。即使經過現代化與憲政改革，天皇制度仍未中斷。
+
+4. Switzerland
+   • System: Federal directorial republic 制度：聯邦執行官制共和國
+   • Established: 1291 (Old Swiss Confederacy) 成立時間：1291年（舊瑞士邦聯）
+   • Notes: Known for its federal system and political stability, Switzerland has maintained a largely consistent republican form for over 700 years. 說明：瑞士以其聯邦制度與政治穩定著稱，700多年來大致保持一致的共和制度。
+
+5. Iceland
+   • System: Republic (originally Althing parliament under Norwegian/Danish rule) 制度：共和國（最初為挪威/丹麥統治下的阿爾辛議會）
+   • Established: 930 AD (Althing founded) 成立時間：公元930年（阿爾辛議會成立）
+   • Notes: The Althing is one of the world's oldest parliamentary institutions. Iceland's democratic institutions have evolved continuously. 說明：阿爾辛議會是世界上最古老的議會機構之一。冰島的民主制度持續演變且未中斷。
+
+Key Observations 關鍵觀察：
+• Monarchies can last millennia if succession is uninterrupted (Japan, UK). 君主制若繼承不中斷，可以延續千年以上（如日本、英國）。
+• Republics with decentralized governance and rule of law can survive centuries (San Marino, Switzerland). 共和國若採去中心化治理並遵守法治，也能延續數百年（如聖馬力諾、瑞士）。
+• Continuity often depends on adaptation, not rigid adherence—institutions evolve while maintaining core legitimacy. 制度的持續性通常依賴於「適應性」，而非死板遵守——制度會演變，同時保持核心合法性。`
     ];
 
-    const delays = { 1: 1, 2: 3000, 3: 9000 };
+    const delays = { 1: 3000, 2: 1, 3: 9000 };
     let activeTest = 1;
     let pendingTimeout = null;
 
@@ -309,6 +355,7 @@ Shakespeare’s Least Famous Plays<br>
         spinner.style.display = 'none';
         responseText.style.display = 'block';
         responseText.style.color = '#1a1a1a';
+        responseText.style.whiteSpace = 'pre-wrap';
         responseText.textContent = responses[idx];
         btns.forEach(b => b.disabled = false);
       }, delay);
