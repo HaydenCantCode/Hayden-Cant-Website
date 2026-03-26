@@ -6,7 +6,7 @@
   <title>Latency Demo   </title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: #ffffff;
@@ -15,7 +15,7 @@
       display: flex;
       flex-direction: column;
     }
-
+ 
     header {
       background: #f5f5f3;
       border-bottom: 0.5px solid rgba(0,0,0,0.15);
@@ -24,13 +24,13 @@
       font-weight: 500;
       width: 100%;
     }
-
+ 
     #main {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
-
+ 
     #sidebar {
       width: 30%;
       border-right: 0.5px solid rgba(0,0,0,0.15);
@@ -39,13 +39,13 @@
       flex-direction: column;
       gap: 10px;
     }
-
+ 
     #sidebar p {
       font-size: 12px;
       color: #888;
       margin-bottom: 4px;
     }
-
+ 
     .test-btn {
       width: 100%;
       padding: 9px 14px;
@@ -61,24 +61,24 @@
       gap: 8px;
       transition: background 0.15s, color 0.15s;
     }
-
+ 
     .test-btn.active {
       cursor: pointer;
       background: #ffffff;
       color: #1a1a1a;
       border-color: rgba(0,0,0,0.3);
     }
-
+ 
     .test-btn.active:hover {
       background: #f5f5f3;
     }
-
+ 
     .test-btn.inactive {
       background: #f5f5f3;
       color: #aaa;
       border-color: rgba(0,0,0,0.1);
     }
-
+ 
     .dot {
       width: 8px;
       height: 8px;
@@ -86,23 +86,23 @@
       flex-shrink: 0;
       background: rgba(0,0,0,0.2);
     }
-
+ 
     .test-btn.active .dot { background: #1D9E75; }
     .test-btn.inactive .dot { background: rgba(0,0,0,0.1); }
-
+ 
     .delay-tag {
       margin-left: auto;
       font-size: 11px;
       color: #aaa;
     }
-
+ 
     #content {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
-
+ 
     #response-panel {
       flex: 1;
       border-bottom: 0.5px solid rgba(0,0,0,0.15);
@@ -111,7 +111,7 @@
       flex-direction: column;
       overflow: hidden;
     }
-
+ 
     .panel-label {
       font-size: 11px;
       font-weight: 500;
@@ -120,7 +120,7 @@
       color: #aaa;
       margin-bottom: 12px;
     }
-
+ 
     #response-box {
       flex: 1;
       background: #f5f5f3;
@@ -133,18 +133,18 @@
       min-height: 160px;
       overflow-y: auto;
     }
-
+ 
     #response-text {
       color: #1a1a1a;
     }
-
+ 
     #response-image {
       display: none;
       flex-direction: column;
       align-items: flex-start;
       gap: 10px;
     }
-
+ 
     #response-image img {
       max-width: 100%;
       max-height: 340px;
@@ -153,12 +153,12 @@
       object-fit: contain;
       display: block;
     }
-
+ 
     #response-image .image-caption {
       font-size: 12px;
       color: #aaa;
     }
-
+ 
     #spinner {
       display: none;
       align-items: center;
@@ -166,12 +166,12 @@
       color: #aaa;
       font-size: 13px;
     }
-
+ 
     .spinner-dots {
       display: flex;
       gap: 4px;
     }
-
+ 
     .spinner-dots span {
       width: 6px;
       height: 6px;
@@ -179,24 +179,24 @@
       background: #aaa;
       animation: bounce 1s infinite;
     }
-
+ 
     .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
     .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
-
+ 
     @keyframes bounce {
       0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
       40%            { opacity: 1;   transform: scale(1); }
     }
-
+ 
     #request-panel {
       padding: 14px 16px;
       background: #ffffff;
     }
-
+ 
     #request-panel .panel-label {
       margin-bottom: 10px;
     }
-
+ 
     .prompt-btn {
       width: 100%;
       padding: 8px 12px;
@@ -210,11 +210,11 @@
       text-align: left;
       line-height: 1.4;
     }
-
+ 
     .prompt-btn:last-child { margin-bottom: 0; }
     .prompt-btn:hover { background: #f5f5f3; }
     .prompt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
+ 
     #active-mode {
       margin-top: 10px;
       font-size: 12px;
@@ -224,9 +224,9 @@
   </style>
 </head>
 <body>
-
-  <header>Latency Demo 網路延遲演示</header>
-
+ 
+  <header>Latency Demo 网络延迟演示</header>
+ 
   <div id="main">
     <div id="sidebar">
       <p>Select latency mode 選擇络延模式</p>
@@ -241,7 +241,7 @@
       </button>
       <div id="active-mode">Active 已激活: <strong>Test 1</strong></div>
     </div>
-
+ 
     <div id="content">
       <div id="response-panel">
         <div class="panel-label">Response 回應</div>
@@ -257,95 +257,125 @@
           </div>
         </div>
       </div>
-
+ 
       <div id="request-panel">
         <div class="panel-label">Prompts 提示</div>
         <button class="prompt-btn" onclick="askQuestion(0)">(Prompt 1 提示1) What are Shakespeare's least famous plays? 莎士比亞最不知名的劇作有哪些?</button>
         <button class="prompt-btn" onclick="askQuestion(1)">(Prompt 2 提示2) Generate a cozy Japanese coffee shop at night, seen through a rain-streaked window, warm amber lighting inside, steam rising from cups, a few patrons reading books, neon reflections on the wet street outside, cinematic photography style, shallow depth of field, moody atmosphere. 「生成一間溫馨的日本咖啡店夜景，透過雨水斑駁的窗戶看到，室內暖色琥珀燈光，杯子裡冒著熱氣，幾位顧客在閱讀書籍，濕潤街道上有霓虹燈反射，電影攝影風格，淺景深，氣氛憂鬱而迷人。」</button>
-        <button class="prompt-btn" onclick="askQuestion(2)">(Prompt 3 提示3) What countries have the longest lasting political systems? 哪些國家的政治制度持續時間最長？</button>
+        <button class="prompt-btn" onclick="askQuestion(2)">(Prompt 3 提示3) Write me an essay about the history of the longest-lasting government in the world. 請為我寫一篇關於世界上持續時間最長的政府歷史的文章。</button>
       </div>
     </div>
   </div>
-
+ 
   <script>
     const latencySpeeds = {
-      1: ['3 seconds 3秒', '6 seconds 6秒', '6 seconds 6秒'],
-      2: ['Instant 立即', '1 second 1秒', '5 seconds 5秒'],
-      3: ['9 seconds 9秒', '12 seconds 12秒', '20 seconds 20秒']
+      1: ['3 seconds 3秒', '10 seconds 10秒', '30 seconds 30秒'],
+      2: ['0.3 seconds 0.3秒', '4 seconds 4秒', '11 seconds 11秒'],
+      3: ['6 seconds 6秒', '30 seconds 30秒', '90 seconds 90秒']
     };
-
+ 
     // null signals "show image instead of text" for question 2
     const responses = [
       `Shakespeare's Least Famous Plays 莎士比亞最不知名的劇作
-
+ 
 Comedies 喜劇
 • The Two Gentlemen of Verona – 維羅納的兩位紳士
 • The Merry Wives of Windsor – 溫莎的快活妻子
 • Love's Labour's Lost – 愛的徒勞
-
+ 
 Histories 歷史劇
 • King John – 約翰王
 • Henry VI, Part 1 – 亨利六世 第一部
 • Henry VI, Part 2 – 亨利六世 第二部
 • Henry VI, Part 3 – 亨利六世 第三部
 • Henry VIII – 亨利八世
-
+ 
 Tragedies / Dark Plays 悲劇 / 陰暗劇
 • Timon of Athens – 雅典的提蒙
 • Coriolanus – 科里奧蘭納斯
 • Troilus and Cressida – 特洛伊羅斯與克瑞西達
-
+ 
 Late Romances 晚期浪漫劇
 • Cymbeline – 辛白林
 • Pericles, Prince of Tyre – 泰爾王子佩里克利斯
 • The Two Noble Kinsmen – 高貴的兩位親戚`,
-
+ 
       null, // Question 2 → image response
-
-      `When we talk about longest-lasting political systems, we usually mean countries where the form of government, constitution, or ruling institutions have remained stable for centuries. This can refer to monarchies, republics, or other governance structures. Here are some notable examples:
-當我們談論最長久的政治制度時，通常指的是那些政府形式、憲法或統治機構數百年來保持穩定的國家。這可以指君主制、共和制或其他治理結構。以下是一些著名的例子：
-
-1. San Marino
-   • System: Republic 制度：共和國
-   • Established: 301 AD 成立時間：公元301年
-   • Notes: Often considered the world's oldest surviving republic. Its government structure—a council-based system—has existed with remarkable continuity. 說明：常被認為是世界上最古老的現存共和國。其政府結構——基於議會的制度——已持續存在，且延續性極高。
-
-2. United Kingdom
-   • System: Constitutional monarchy with parliamentary democracy 制度：君主立憲制與議會民主
-   • Key Dates: Monarchy traceable to 9th–10th century; Parliament evolved since 13th century 重要年份：君主制可追溯至9–10世紀；議會自13世紀起逐步演變
-   • Notes: The monarchy has persisted for over a millennium, and parliamentary institutions have evolved without interruption. 說明：君主制度延續超過千年，議會制度演變過程中未曾中斷。
-
-3. Japan
-   • System: Constitutional monarchy (Emperor as head of state) 制度：君主立憲制（天皇為國家元首）
-   • Established: Emperor lineage traced to 660 BC (traditional); modern constitutional monarchy established 1889 成立時間：天皇世系可追溯至公元前660年（傳統說法）；現代君主立憲制於1889年建立
-   • Notes: Japan has the world's oldest continuing hereditary monarchy. Even after modernization and constitutional changes, the imperial system remains unbroken. 說明：日本擁有世界上最古老且持續的世襲君主制度。即使經過現代化與憲政改革，天皇制度仍未中斷。
-
-4. Switzerland
-   • System: Federal directorial republic 制度：聯邦執行官制共和國
-   • Established: 1291 (Old Swiss Confederacy) 成立時間：1291年（舊瑞士邦聯）
-   • Notes: Known for its federal system and political stability, Switzerland has maintained a largely consistent republican form for over 700 years. 說明：瑞士以其聯邦制度與政治穩定著稱，700多年來大致保持一致的共和制度。
-
-5. Iceland
-   • System: Republic (originally Althing parliament under Norwegian/Danish rule) 制度：共和國（最初為挪威/丹麥統治下的阿爾辛議會）
-   • Established: 930 AD (Althing founded) 成立時間：公元930年（阿爾辛議會成立）
-   • Notes: The Althing is one of the world's oldest parliamentary institutions. Iceland's democratic institutions have evolved continuously. 說明：阿爾辛議會是世界上最古老的議會機構之一。冰島的民主制度持續演變且未中斷。
-
-Key Observations 關鍵觀察：
-• Monarchies can last millennia if succession is uninterrupted (Japan, UK). 君主制若繼承不中斷，可以延續千年以上（如日本、英國）。
-• Republics with decentralized governance and rule of law can survive centuries (San Marino, Switzerland). 共和國若採去中心化治理並遵守法治，也能延續數百年（如聖馬力諾、瑞士）。
-• Continuity often depends on adaptation, not rigid adherence—institutions evolve while maintaining core legitimacy. 制度的持續性通常依賴於「適應性」，而非死板遵守——制度會演變，同時保持核心合法性。`
+ 
+      `The Oldest Republic: A History of San Marino's Enduring Government
+最古老的共和國：聖馬力諾政府的歷史
+ 
+Introduction 引言
+ 
+In a world where empires have crumbled, revolutions have toppled dynasties, and borders have been redrawn countless times, one tiny nation perched atop a rocky mountain in central Italy has maintained the same form of government for over 1,700 years.
+在一個帝國崩潰、革命推翻王朝、國界無數次重劃的世界裡，一個坐落於義大利中部岩石山頂的小國，維持著同一種政府形式超過1,700年。
+ 
+The Republic of San Marino, founded in 301 AD, holds the remarkable distinction of being the world's oldest surviving republic. Its story is one of fierce independence, shrewd diplomacy, and an enduring commitment to self-governance that has outlasted nearly every other political institution on Earth.
+聖馬力諾共和國成立於公元301年，擁有世界上現存最古老共和國的非凡地位。它的故事是一段關於堅定獨立、精明外交，以及對自治的持久承諾的歷史，這種承諾比地球上幾乎所有其他政治制度都更為長久。
+ 
+Origins: A Saint, a Stone, and a Vision of Freedom
+起源：一位聖人、一塊岩石與自由的願景
+ 
+According to tradition, San Marino was founded by a Christian stonemason named Marinus — later canonized as Saint Marinus — who fled religious persecution under the Roman Emperor Diocletian. Marinus and a small community of fellow Christians settled atop Monte Titano, a steep limestone peak rising from the flatlands of the Romagna region. There, isolated by geography and united by faith, they established a self-governing community built on the principles of communal decision-making and mutual protection.
+根據傳統，聖馬力諾由一位名叫馬利努斯的基督教石匠所創立——他後來被封為聖馬利努斯——為逃避羅馬皇帝戴克里先的宗教迫害而出走。馬利努斯與一小群基督徒定居於蒂塔諾山頂，那是一座從羅馬涅平原拔地而起的陡峭石灰岩山峰。在那裡，他們因地理而孤立，因信仰而凝聚，建立了一個以共同決策與相互保護為原則的自治社群。
+ 
+While the founding legend carries an air of myth, historical evidence confirms that an organized community existed on Monte Titano by the early 4th century. A document from 885 AD references the existing "land of San Marino," suggesting the community had already been functioning as a distinct political entity for centuries by that point.
+雖然這個建國傳說帶有神話色彩，但歷史證據確認，蒂塔諾山上在4世紀初已存在一個有組織的社群。一份公元885年的文件提及當時已存在的「聖馬力諾之地」，顯示這個社群在那時已作為獨特的政治實體運作了數百年。
+ 
+Medieval Consolidation 中世紀的鞏固
+ 
+Through the turbulent Middle Ages, San Marino steadily formalized its governing structures. By the 12th century, the republic had developed the role of the Captains Regent — two co-heads of state elected every six months from the Grand and General Council, the nation's parliament. This dual-leadership model, designed explicitly to prevent any single person from accumulating too much power, remains in use to this day and stands as one of the most remarkable examples of institutional continuity in history.
+在動盪的中世紀，聖馬力諾穩步將其治理結構正式化。到12世紀，共和國發展出執政長官的制度——由大議會（即國家議會）每六個月選出兩位共同國家元首。這種雙重領導模式明確設計用於防止任何人累積過多權力，至今仍在使用，是歷史上最傑出的制度延續典範之一。
+ 
+The six-month term limit and the rule that the two Captains Regent cannot be related to each other or stand for immediate re-election reflects a sophisticated political philosophy for its era — one that prioritized collective governance and the prevention of tyranny centuries before such ideas became widespread in Europe.
+六個月的任期限制，以及兩位執政長官不得有親屬關係、不得立即連任的規定，反映了那個時代成熟的政治哲學——在這些理念在歐洲廣泛傳播的數百年前，便已優先考量集體治理與防止專制。
+ 
+Survival Through Diplomacy 外交求存
+ 
+San Marino's survival is as much a story of diplomacy as it is of governance. Surrounded by far more powerful neighbors — the Papal States, various Italian principalities, and later a unified Italy — San Marino repeatedly demonstrated a talent for navigating dangerous political waters without being absorbed.
+聖馬力諾的存續，既是一個治理的故事，也是一個外交的故事。被強大得多的鄰國所包圍——教皇國、各義大利公國，以及後來統一的義大利——聖馬力諾一再展現出在危險的政治環境中周旋而不被吞併的才能。
+ 
+In 1631, the Papacy officially recognized San Marino's independence, a crucial milestone that gave the republic legitimacy in the eyes of the broader European order. Later, in 1797, Napoleon Bonaparte — who was systematically reorganizing the map of Europe — was offered the opportunity to expand San Marino's territory. The republic's leaders politely declined, wisely recognizing that growth might invite the kind of attention that threatened their autonomy. Napoleon, reportedly impressed by their principled restraint, confirmed their independence.
+1631年，教廷正式承認聖馬力諾的獨立，這是一個關鍵里程碑，使共和國在更廣泛的歐洲秩序中獲得合法性。後來，在1797年，拿破崙·波拿巴——正在系統性地重組歐洲版圖——獲得了擴張聖馬力諾領土的機會。共和國的領導人禮貌地拒絕了，明智地認識到擴張可能會引來威脅其自治的關注。據說拿破崙對他們有原則的克制印象深刻，確認了其獨立地位。
+ 
+When Italy unified in the 19th century under the Risorgimento movement, San Marino again managed the delicate task of remaining sovereign. In 1862, it signed a treaty of friendship with the newly formed Kingdom of Italy that guaranteed its independence — a relationship that, though sometimes strained, has endured ever since.
+當義大利在19世紀的復興運動中統一時，聖馬力諾再次完成了保持主權的微妙任務。1862年，它與新成立的義大利王國簽署了一項友好條約，保障了其獨立——這段關係雖然有時緊張，但自此一直延續至今。
+ 
+The 20th Century: Neutrality and Reform 二十世紀：中立與改革
+ 
+San Marino declared neutrality in both World War I and World War II, though the latter brought it close to catastrophe. In 1944, Allied bombing mistakenly struck San Marino, and German forces briefly occupied the republic. Despite these upheavals, its governmental institutions survived intact.
+聖馬力諾在第一次和第二次世界大戰中均宣布中立，但後者使其幾乎陷入災難。1944年，盟軍轟炸誤擊了聖馬力諾，德軍短暫佔領了這個共和國。儘管如此動盪，其政府機構依然完整存續。
+ 
+The postwar era brought significant democratic reforms. Women gained full voting rights in 1964. The Grand and General Council broadened political participation, and the republic developed a modern legal system while preserving its ancient institutional framework. A communist-led coalition governed the republic from 1945 to 1957 — a peaceful democratic transition that demonstrated the system's flexibility in accommodating ideological change without structural collapse.
+戰後時代帶來了重大的民主改革。1964年，婦女獲得完整的投票權。大議會擴大了政治參與，共和國在保留古老制度框架的同時，建立了現代法律體系。一個由共產黨領導的聯合政府從1945年統治至1957年——這是一次和平的民主過渡，展示了該制度在不發生結構性崩潰的情況下容納意識形態變革的靈活性。
+ 
+San Marino Today 今日的聖馬力諾
+ 
+Today, San Marino is a fully modern democracy with a population of approximately 35,000 citizens. It operates under a 1600 constitution — one of the world's oldest written constitutional documents still in force — alongside a series of later amendments. The Grand and General Council of sixty members, the Captains Regent rotating every six months, and an independent judiciary continue to function as they have for centuries.
+今天，聖馬力諾是一個擁有約35,000名公民的完全現代民主國家。它依照一部1600年的憲法運作——這是世界上仍然有效的最古老成文憲法之一——以及一系列後來的修正案。六十名成員組成的大議會、每六個月輪換的執政長官，以及獨立的司法機構，繼續如數百年來一般運作。
+ 
+The republic is a member of the United Nations and the Council of Europe, and while it is not an EU member, it uses the euro and maintains close economic ties with Italy. Its economy is built on tourism, banking, and the manufacture of ceramics, wine, and luxury goods.
+共和國是聯合國和歐洲委員會的成員，雖然不是歐盟成員，但使用歐元並與義大利保持緊密的經濟聯繫。其經濟建立在旅遊業、銀行業以及陶瓷、葡萄酒和奢侈品製造業上。
+ 
+Conclusion: Why San Marino Endures 結語：為何聖馬力諾得以長存
+ 
+The longevity of San Marino's government defies simple explanation. Geography helped — Monte Titano was a natural fortress. Size helped — a tiny nation with no resources worth conquering offered little temptation to expansionist powers. But above all, it was a consistent political philosophy that made the difference: a deep institutional commitment to shared power, term limits, rule of law, and independence.
+聖馬力諾政府的長久存續難以用簡單的原因解釋。地理條件有所幫助——蒂塔諾山是天然的堡壘。規模也有所幫助——一個沒有值得征服資源的小國，對擴張主義勢力幾乎沒有誘惑。但最重要的，是一貫的政治哲學造就了這種差異：對權力共享、任期限制、法治與獨立的深厚制度承諾。
+ 
+In an age when governments rise and fall with alarming regularity, San Marino stands as quiet proof that political institutions, when designed thoughtfully and maintained with care, can endure not just for decades or centuries, but for millennia.
+在一個政府以驚人頻率興衰更替的時代，聖馬力諾靜靜地證明：政治制度若設計周全、悉心維護，不僅能存續數十年或數百年，更能延續數千年。`
     ];
-
+ 
     const IMAGE_PATH = 'https://haydencantcode.github.io/Hayden-Cant-Website/resources/testimage.png';
-
+ 
     const delays = {
-      1: [3000, 6000, 6000],
-      2: [0, 1000, 5000],
-      3: [9000, 12000, 20000]
+      1: [3000, 10000, 30000],
+      2: [300, 4000, 11000],
+      3: [6000, 30000, 90000]
     };
     let activeTest = 1;
     let pendingTimeout = null;
-
+ 
     function selectTest(n) {
       if (n === activeTest) return;
       activeTest = n;
@@ -355,26 +385,28 @@ Key Observations 關鍵觀察：
       });
       document.getElementById('active-mode').innerHTML = 'Active 已激活: <strong>Test ' + n + '</strong>';
     }
-
+ 
     function askQuestion(idx) {
       if (pendingTimeout) clearTimeout(pendingTimeout);
       const btns = document.querySelectorAll('.prompt-btn');
       btns.forEach(b => b.disabled = true);
-
+ 
       const spinner = document.getElementById('spinner');
       const responseText = document.getElementById('response-text');
       const responseImage = document.getElementById('response-image');
       const delay = delays[activeTest][idx];
-      const label = delay <= 0 ? 'Responding instantly...' : 'Thinking 思考';
-
+      const label = delay >= 30000
+        ? 'This may take a while, please wait... 這可能需要一些時間，請稍等...'
+        : 'Thinking 思考';
+ 
       spinner.style.display = 'flex';
       document.getElementById('spinner-label').textContent = label;
       responseText.style.display = 'none';
       responseImage.style.display = 'none';
-
+ 
       pendingTimeout = setTimeout(() => {
         spinner.style.display = 'none';
-
+ 
         if (responses[idx] === null) {
           // Image response for question 2
           const imgEl = document.getElementById('response-img-el');
@@ -388,13 +420,14 @@ Key Observations 關鍵觀察：
           responseText.style.whiteSpace = 'pre-wrap';
           responseText.textContent = latencySpeeds[activeTest][idx] + '\n\n' + responses[idx];
         }
-
+ 
         btns.forEach(b => b.disabled = false);
       }, delay);
     }
   </script>
-
+ 
 </body>
 </html>
+ 
 
 
