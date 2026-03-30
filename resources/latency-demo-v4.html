@@ -310,6 +310,12 @@ header {
 .prompt-btn:active:not(:disabled) { background: #f5f5f3; }
 .prompt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
  
+.prompt-btn.prompt-done {
+  border-color: #1D9E75;
+  background: #f0faf6;
+  color: #1a1a1a;
+}
+ 
 /* ── Mobile bottom tab bar ── */
 #mobile-mode-bar {
   display: none;
@@ -780,31 +786,65 @@ const delays = {
   3: [6000, 30000, 90000]
 };
  
+const TOTAL_MODES   = 3;   // modes 1,2,3
+const TOTAL_PROMPTS = 3;   // prompts 0,1,2
+const TOTAL_COMBOS  = TOTAL_MODES * TOTAL_PROMPTS; // 9
+ 
 let activeTest = 1;
 let pendingTimeout = null;
-const triedModes = new Set();
+ 
+// Track which (mode, prompt) pairs have been completed
+// Key format: "mode-prompt", e.g. "1-0", "2-1"
+const triedCombos = new Set();
+ 
+function comboKey(mode, prompt) { return mode + '-' + prompt; }
+ 
+function isModeDone(mode) {
+  return [0, 1, 2].every(p => triedCombos.has(comboKey(mode, p)));
+}
+ 
+function isPromptDone(prompt) {
+  return [1, 2, 3].every(m => triedCombos.has(comboKey(m, prompt)));
+}
+ 
+function updateProgressIndicators() {
+  // Desktop sidebar: mark mode done if all 3 prompts tried with it
+  [1, 2, 3].forEach(m => {
+    const done = isModeDone(m);
+    document.getElementById('btn-t' + m).classList.toggle('tried', done);
+    document.getElementById('mob-btn-t' + m).classList.toggle('tried', done);
+  });
+ 
+  // Prompt buttons: add a visual tick if all 3 modes tried for that prompt
+  document.querySelectorAll('.prompt-btn').forEach((btn, idx) => {
+    const done = isPromptDone(idx);
+    btn.classList.toggle('prompt-done', done);
+    // Update button label prefix
+    const originalText = btn.getAttribute('data-original') || btn.textContent;
+    if (!btn.getAttribute('data-original')) btn.setAttribute('data-original', originalText);
+    btn.textContent = (done ? '✓ ' : '') + originalText;
+  });
+ 
+  // Progress counter in active-mode label
+  const count = triedCombos.size;
+  document.getElementById('active-mode').innerHTML =
+    '目前模式 Active: <strong>' + MODE_LABELS[activeTest] + '</strong>' +
+    '<br><span style="font-size:10px;color:#bbb;">' + count + ' / ' + TOTAL_COMBOS + ' completed</span>';
+}
  
 function selectTest(n) {
   activeTest = n;
-  // Update desktop sidebar buttons
   [1, 2, 3].forEach(i => {
     document.getElementById('btn-t' + i).classList.toggle('selected', i === n);
-  });
-  // Update mobile tab buttons
-  [1, 2, 3].forEach(i => {
     document.getElementById('mob-btn-t' + i).classList.toggle('selected', i === n);
   });
-  document.getElementById('active-mode').innerHTML =
-    '目前模式 Active: <strong>' + MODE_LABELS[n] + '</strong>';
+  updateProgressIndicators();
 }
  
-function markModeTried(n) {
-  triedModes.add(n);
-  // Mark desktop button
-  document.getElementById('btn-t' + n).classList.add('tried');
-  // Mark mobile tab button
-  document.getElementById('mob-btn-t' + n).classList.add('tried');
-  if (triedModes.size === 3) {
+function markCombo(mode, promptIdx) {
+  triedCombos.add(comboKey(mode, promptIdx));
+  updateProgressIndicators();
+  if (triedCombos.size === TOTAL_COMBOS) {
     setTimeout(showCompletionOverlay, 1200);
   }
 }
@@ -847,8 +887,9 @@ function askQuestion(idx) {
   responseText.style.display  = 'none';
   responseImage.style.display = 'none';
  
-  // Scroll response box into view on mobile
   document.getElementById('response-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+ 
+  const modeAtStart = activeTest; // capture in case user switches mode while waiting
  
   pendingTimeout = setTimeout(() => {
     spinner.style.display = 'none';
@@ -857,21 +898,23 @@ function askQuestion(idx) {
       const imgEl     = document.getElementById('response-img-el');
       const captionEl = document.getElementById('response-img-caption');
       imgEl.src = IMAGE_PATH;
-      captionEl.textContent = latencySpeeds[activeTest][idx] + ' · ' + IMAGE_PATH;
+      captionEl.textContent = latencySpeeds[modeAtStart][idx] + ' · ' + IMAGE_PATH;
       responseImage.style.display = 'flex';
     } else {
       responseText.style.display    = 'block';
       responseText.style.color      = '#1a1a1a';
       responseText.style.whiteSpace = 'pre-wrap';
-      responseText.textContent = latencySpeeds[activeTest][idx] + '\n\n' + responses[idx];
+      responseText.textContent = latencySpeeds[modeAtStart][idx] + '\n\n' + responses[idx];
     }
  
     btns.forEach(b => b.disabled = false);
-    markModeTried(activeTest);
+    markCombo(modeAtStart, idx);
   }, delay);
 }
  
 selectTest(1);
+updateProgressIndicators();
 </script>
 </body>
 </html>
+ 
