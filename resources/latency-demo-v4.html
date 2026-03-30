@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Latency Demo 網路延遲演示</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #1a1a1a;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  background: #f5f5f3;
+  border-bottom: 0.5px solid rgba(0,0,0,0.15);
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Steps guide bar */
+#steps-guide {
+  background: #fffbf0;
+  border-bottom: 0.5px solid rgba(200,160,0,0.25);
+  padding: 10px 20px;
+  flex-shrink: 0;
+}
+
+#steps-guide .steps-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #b07d00;
+  margin-bottom: 7px;
+}
+
+#steps-guide ol {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px 8px;
+  list-style: none;
+  counter-reset: step-counter;
+}
+
+#steps-guide ol li {
+  counter-increment: step-counter;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.4;
+}
+
+#steps-guide ol li::before {
+  content: counter(step-counter);
+  background: #e8c84a;
+  color: #1a1a1a;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Desktop sidebar ── */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 0.5px solid rgba(0,0,0,0.15);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+#sidebar .sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.mode-btn {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 0.5px solid rgba(0,0,0,0.2);
+  background: #ffffff;
+  color: #1a1a1a;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+
+.mode-btn:hover { background: #f5f5f3; }
+
+.mode-btn.selected {
+  background: #f0faf6;
+  border-color: #1D9E75;
+  box-shadow: 0 0 0 1.5px #1D9E7530;
+}
+
+.mode-btn .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.18);
+  margin-top: 4px;
+}
+
+.mode-btn.selected .dot { background: #1D9E75; }
+
+.mode-btn .mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mode-btn .mode-name-en {
+  font-weight: 500;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.mode-btn .mode-name-zh {
+  font-size: 12px;
+  color: #888;
+}
+
+.tried-badge {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  font-size: 10px;
+  background: #1D9E75;
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 6px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.mode-btn.tried .tried-badge { opacity: 1; }
+
+#active-mode {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  padding: 6px 8px;
+  background: #f5f5f3;
+  border-radius: 6px;
+  margin-top: 2px;
+}
+
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+#response-panel {
+  flex: 1;
+  border-bottom: 0.5px solid rgba(0,0,0,0.15);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+#response-box {
+  flex: 1;
+  background: #f5f5f3;
+  border-radius: 8px;
+  border: 0.5px solid rgba(0,0,0,0.1);
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+#response-text { color: #1a1a1a; }
+
+#response-image {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#response-image img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 6px;
+  border: 0.5px solid rgba(0,0,0,0.1);
+  object-fit: contain;
+  display: block;
+}
+
+#response-image .image-caption { font-size: 12px; color: #aaa; }
+
+#spinner {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.spinner-dots { display: flex; gap: 4px; }
+
+.spinner-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #aaa;
+  animation: bounce 1s infinite;
+}
+
+.spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
+.spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Request panel (desktop) ── */
+#request-panel {
+  padding: 12px 16px;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+#request-panel .panel-label { margin-bottom: 8px; }
+
+.prompt-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 0.5px solid rgba(0,0,0,0.2);
+  background: #ffffff;
+  color: #1a1a1a;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.4;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.prompt-btn:last-child { margin-bottom: 0; }
+.prompt-btn:hover:not(:disabled),
+.prompt-btn:active:not(:disabled) { background: #f5f5f3; }
+.prompt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Mobile bottom tab bar ── */
+#mobile-mode-bar {
+  display: none;
+  flex-shrink: 0;
+  border-top: 0.5px solid rgba(0,0,0,0.15);
+  background: #f5f5f3;
+}
+
+.mobile-tabs {
+  display: flex;
+  width: 100%;
+}
+
+.mobile-tab {
+  flex: 1;
+  padding: 10px 4px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #888;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  position: relative;
+  /* safe area bottom padding applied via JS */
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-tab .tab-icon { font-size: 18px; line-height: 1; }
+.mobile-tab .tab-label-en { font-weight: 500; font-size: 11px; }
+.mobile-tab .tab-label-zh { font-size: 10px; color: #aaa; }
+
+.mobile-tab.selected {
+  color: #1D9E75;
+  background: rgba(29,158,117,0.06);
+}
+
+.mobile-tab.selected .tab-label-zh { color: #1D9E75; opacity: 0.7; }
+
+.mobile-tab .mob-tried-dot {
+  position: absolute;
+  top: 8px;
+  right: calc(50% - 14px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1D9E75;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mobile-tab.tried .mob-tried-dot { opacity: 1; }
+
+/* ── Mobile prompt sheet (slide-up) ── */
+#prompt-sheet {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-top: 0.5px solid rgba(0,0,0,0.15);
+  border-radius: 16px 16px 0 0;
+  z-index: 50;
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#prompt-sheet.open { transform: translateY(0); }
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+  margin: 10px auto 8px;
+}
+
+.sheet-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  padding: 0 16px 10px;
+}
+
+.sheet-prompts {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#sheet-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 40;
+}
+
+#sheet-overlay.show { display: block; }
+
+/* ── Completion overlay ── */
+#completion-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+  padding: 16px;
+}
+
+#completion-overlay.show { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+#completion-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 36px 32px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+#completion-card .trophy { font-size: 48px; margin-bottom: 16px; line-height: 1; }
+#completion-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+
+#completion-card .sub-en {
+  font-size: 13px; color: #555; margin-bottom: 4px; line-height: 1.5;
+}
+#completion-card .sub-zh {
+  font-size: 13px; color: #888; margin-bottom: 24px; line-height: 1.5;
+}
+
+#completion-card .btn-group { display: flex; flex-direction: column; gap: 10px; }
+
+#completion-card .btn-primary {
+  padding: 12px 20px;
+  background: #1D9E75;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#completion-card .btn-primary:hover { background: #178a63; }
+
+#completion-card .btn-secondary {
+  padding: 10px 20px;
+  background: transparent;
+  color: #888;
+  border: 0.5px solid rgba(0,0,0,0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#completion-card .btn-secondary:hover { background: #f5f5f3; }
+
+/* ── Responsive breakpoint ── */
+@media (max-width: 640px) {
+  /* Hide desktop sidebar and steps on mobile */
+  #sidebar { display: none; }
+
+  #steps-guide ol {
+    grid-template-columns: 1fr 1fr;
+    font-size: 11px;
+  }
+
+  /* Hide steps guide to save space — still accessible via a collapsed version */
+  #steps-guide {
+    padding: 8px 14px;
+  }
+
+  #steps-guide .steps-title { margin-bottom: 5px; }
+
+  /* Hide desktop request panel */
+  #request-panel { display: none; }
+
+  /* Show mobile bottom bar */
+  #mobile-mode-bar { display: block; }
+
+  header {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  #response-panel {
+    padding: 10px 12px;
+  }
+
+  #response-box {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 380px) {
+  #steps-guide { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>Latency Demo 網路延遲演示</header>
+
+<!-- Steps Guide -->
+<div id="steps-guide">
+  <div class="steps-title">操作步驟 Steps Guide</div>
+  <ol>
+    <li>在左側選擇一個模式<br><span style="color:#aaa;font-size:11px;">Select a mode on the left</span></li>
+    <li>點擊提示語查看回應<br><span style="color:#aaa;font-size:11px;">Click a prompt to see the response</span></li>
+    <li>比較不同模式的速度<br><span style="color:#aaa;font-size:11px;">Compare the speeds</span></li>
+    <li>關閉此演示頁面<br><span style="color:#aaa;font-size:11px;">Close this demo webpage</span></li>
+    <li>完成問卷調查<br><span style="color:#aaa;font-size:11px;">Complete the survey</span></li>
+  </ol>
+</div>
+
+<div id="main">
+  <!-- Desktop sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-label">模式 Mode</div>
+
+    <button class="mode-btn selected" id="btn-t1" onclick="selectTest(1)">
+      <span class="dot"></span>
+      <div class="mode-info">
+        <span class="mode-name-en">⚡ Instant Mode</span>
+        <span class="mode-name-zh">即時模式</span>
+      </div>
+      <span class="tried-badge">✓ 已試</span>
+    </button>
+
+    <button class="mode-btn" id="btn-t2" onclick="selectTest(2)">
+      <span class="dot"></span>
+      <div class="mode-info">
+        <span class="mode-name-en">🔄 Steady Mode</span>
+        <span class="mode-name-zh">穩定模式</span>
+      </div>
+      <span class="tried-badge">✓ 已試</span>
+    </button>
+
+    <button class="mode-btn" id="btn-t3" onclick="selectTest(3)">
+      <span class="dot"></span>
+      <div class="mode-info">
+        <span class="mode-name-en">🔍 Comprehensive Mode</span>
+        <span class="mode-name-zh">完整模式</span>
+      </div>
+      <span class="tried-badge">✓ 已試</span>
+    </button>
+
+    <div id="active-mode">目前模式 Active: <strong>⚡ Instant</strong></div>
+  </div>
+
+  <div id="content">
+    <div id="response-panel">
+      <div class="panel-label">Response 回應</div>
+      <div id="response-box">
+        <div id="spinner">
+          <div class="spinner-dots"><span></span><span></span><span></span></div>
+          <span id="spinner-label">思考中 Thinking…</span>
+        </div>
+        <div id="response-text" style="color:#aaa;">請在下方選擇一個提示語，查看此處的回應。<br>Select a prompt below to see the response here.</div>
+        <div id="response-image">
+          <img id="response-img-el" src="" alt="Generated image" />
+          <span class="image-caption" id="response-img-caption"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop request panel -->
+    <div id="request-panel">
+      <div class="panel-label">Prompts 提示語</div>
+      <button class="prompt-btn" onclick="askQuestion(0)">(提示 1) What are Shakespeare's least famous plays? 莎士比亞最不知名的劇作有哪些？</button>
+      <button class="prompt-btn" onclick="askQuestion(1)">(提示 2) Generate a cozy Japanese coffee shop at night, seen through a rain-streaked window... 生成一間溫馨的日本咖啡店夜景，透過雨水斑駁的窗戶看到…</button>
+      <button class="prompt-btn" onclick="askQuestion(2)">(提示 3) Write an essay about the history of the longest-lasting government in the world. 請寫一篇關於世界上持續時間最長的政府歷史的文章。</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom mode tab bar -->
+<div id="mobile-mode-bar">
+  <div class="mobile-tabs">
+    <button class="mobile-tab selected" id="mob-btn-t1" onclick="selectTest(1)">
+      <span class="mob-tried-dot"></span>
+      <span class="tab-icon">⚡</span>
+      <span class="tab-label-en">Instant</span>
+      <span class="tab-label-zh">即時</span>
+    </button>
+    <button class="mobile-tab" id="mob-btn-t2" onclick="selectTest(2)">
+      <span class="mob-tried-dot"></span>
+      <span class="tab-icon">🔄</span>
+      <span class="tab-label-en">Steady</span>
+      <span class="tab-label-zh">穩定</span>
+    </button>
+    <button class="mobile-tab" id="mob-btn-t3" onclick="selectTest(3)">
+      <span class="mob-tried-dot"></span>
+      <span class="tab-icon">🔍</span>
+      <span class="tab-label-en">Comprehensive</span>
+      <span class="tab-label-zh">完整</span>
+    </button>
+    <button class="mobile-tab" id="mob-btn-prompts" onclick="openPromptSheet()">
+      <span class="tab-icon">💬</span>
+      <span class="tab-label-en">Prompts</span>
+      <span class="tab-label-zh">提示語</span>
+    </button>
+  </div>
+</div>
+
+<!-- Mobile prompt sheet overlay -->
+<div id="sheet-overlay" onclick="closePromptSheet()"></div>
+
+<!-- Mobile prompt slide-up sheet -->
+<div id="prompt-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">Prompts 提示語</div>
+  <div class="sheet-prompts">
+    <button class="prompt-btn" onclick="askQuestion(0); closePromptSheet()">(提示 1) What are Shakespeare's least famous plays? 莎士比亞最不知名的劇作有哪些？</button>
+    <button class="prompt-btn" onclick="askQuestion(1); closePromptSheet()">(提示 2) Generate a cozy Japanese coffee shop at night, seen through a rain-streaked window... 生成一間溫馨的日本咖啡店夜景，透過雨水斑駁的窗戶看到…</button>
+    <button class="prompt-btn" onclick="askQuestion(2); closePromptSheet()">(提示 3) Write an essay about the history of the longest-lasting government in the world. 請寫一篇關於世界上持續時間最長的政府歷史的文章。</button>
+  </div>
+</div>
+
+<!-- Completion Overlay -->
+<div id="completion-overlay">
+  <div id="completion-card">
+    <div class="trophy">🎉</div>
+    <h2>您已體驗所有模式！</h2>
+    <p class="sub-en">You've experienced all modes!<br>Ready to share your thoughts?</p>
+    <p class="sub-zh">感謝您完成延遲演示體驗。<br>現在請關閉此頁面並完成問卷調查。</p>
+    <div class="btn-group">
+      <button class="btn-primary" onclick="closeOverlay()">✓ 好的，去填寫問卷　Close &amp; Take Survey</button>
+      <button class="btn-secondary" onclick="closeOverlay()">繼續探索　Continue Exploring</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MODE_LABELS = {
+  1: '⚡ Instant',
+  2: '🔄 Steady',
+  3: '🔍 Comprehensive'
+};
+
+const latencySpeeds = {
+  1: ['0.3 seconds 0.3秒', '4 seconds 4秒', '11 seconds 11秒'],
+  2: ['3 seconds 3秒', '10 seconds 10秒', '30 seconds 30秒'],
+  3: ['6 seconds 6秒', '30 seconds 30秒', '90 seconds 90秒']
+};
+
+const responses = [
+  `Shakespeare's Least Famous Plays 莎士比亞最不知名的劇作
+
+Comedies 喜劇
+
+• The Two Gentlemen of Verona – 維羅納的兩位紳士
+• The Merry Wives of Windsor – 溫莎的快活妻子
+• Love's Labour's Lost – 愛的徒勞
+
+Histories 歷史劇
+
+• King John – 約翰王
+• Henry VI, Part 1 – 亨利六世 第一部
+• Henry VI, Part 2 – 亨利六世 第二部
+• Henry VI, Part 3 – 亨利六世 第三部
+• Henry VIII – 亨利八世
+
+Tragedies / Dark Plays 悲劇 / 陰暗劇
+
+• Timon of Athens – 雅典的提蒙
+• Coriolanus – 科里奧蘭納斯
+• Troilus and Cressida – 特洛伊羅斯與克瑞西達
+
+Late Romances 晚期浪漫劇
+
+• Cymbeline – 辛白林
+• Pericles, Prince of Tyre – 泰爾王子佩里克利斯
+• The Two Noble Kinsmen – 高貴的兩位親戚`,
+
+  null,
+
+  `The Oldest Republic: A History of San Marino's Enduring Government
+最古老的共和國：聖馬力諾政府的歷史
+
+Introduction 引言
+
+In a world where empires have crumbled, revolutions have toppled dynasties, and borders have been redrawn countless times, one tiny nation perched atop a rocky mountain in central Italy has maintained the same form of government for over 1,700 years.
+
+在一個帝國崩潰、革命推翻王朝、國界無數次重劃的世界裡，一個坐落於義大利中部岩石山頂的小國，維持著同一種政府形式超過1,700年。
+
+The Republic of San Marino, founded in 301 AD, holds the remarkable distinction of being the world's oldest surviving republic. Its story is one of fierce independence, shrewd diplomacy, and an enduring commitment to self-governance that has outlasted nearly every other political institution on Earth.
+
+聖馬力諾共和國成立於公元301年，擁有世界上現存最古老共和國的非凡地位。它的故事是一段關於堅定獨立、精明外交，以及對自治的持久承諾的歷史，這種承諾比地球上幾乎所有其他政治制度都更為長久。
+
+Origins: A Saint, a Stone, and a Vision of Freedom
+起源：一位聖人、一塊岩石與自由的願景
+
+According to tradition, San Marino was founded by a Christian stonemason named Marinus — later canonized as Saint Marinus — who fled religious persecution under the Roman Emperor Diocletian. Marinus and a small community of fellow Christians settled atop Monte Titano, a steep limestone peak rising from the flatlands of the Romagna region. There, isolated by geography and united by faith, they established a self-governing community built on the principles of communal decision-making and mutual protection.
+
+根據傳統，聖馬力諾由一位名叫馬利努斯的基督教石匠所創立——他後來被封為聖馬利努斯——為逃避羅馬皇帝戴克里先的宗教迫害而出走。馬利努斯與一小群基督徒定居於蒂塔諾山頂，那是一座從羅馬涅平原拔地而起的陡峭石灰岩山峰。在那裡，他們因地理而孤立，因信仰而凝聚，建立了一個以共同決策與相互保護為原則的自治社群。
+
+Medieval Consolidation 中世紀的鞏固
+
+By the 12th century, the republic had developed the role of the Captains Regent — two co-heads of state elected every six months from the Grand and General Council. This dual-leadership model, designed explicitly to prevent any single person from accumulating too much power, remains in use to this day.
+
+到12世紀，共和國發展出執政長官的制度——由大議會每六個月選出兩位共同國家元首。這種雙重領導模式明確設計用於防止任何人累積過多權力，至今仍在使用。
+
+Survival Through Diplomacy 外交求存
+
+In 1631, the Papacy officially recognized San Marino's independence. Later, in 1797, Napoleon confirmed their independence after they wisely declined his offer to expand their territory.
+
+1631年，教廷正式承認聖馬力諾的獨立。後來在1797年，拿破崙在他們明智地拒絕擴張領土的提議後，確認了其獨立地位。
+
+San Marino Today 今日的聖馬力諾
+
+Today, San Marino is a fully modern democracy with a population of approximately 35,000 citizens, operating under a 1600 constitution — one of the world's oldest written constitutional documents still in force.
+
+今天，聖馬力諾是一個擁有約35,000名公民的完全現代民主國家，依照一部1600年的憲法運作——這是世界上仍然有效的最古老成文憲法之一。
+
+In an age when governments rise and fall with alarming regularity, San Marino stands as quiet proof that political institutions, when designed thoughtfully and maintained with care, can endure not just for decades or centuries, but for millennia.
+
+在一個政府以驚人頻率興衰更替的時代，聖馬力諾靜靜地證明：政治制度若設計周全、悉心維護，不僅能存續數十年或數百年，更能延續數千年。`
+];
+
+const IMAGE_PATH = 'https://haydencantcode.github.io/Hayden-Cant-Website/resources/testimage.png';
+
+const delays = {
+  1: [300,  4000,  11000],
+  2: [3000, 10000, 30000],
+  3: [6000, 30000, 90000]
+};
+
+let activeTest = 1;
+let pendingTimeout = null;
+const triedModes = new Set();
+
+function selectTest(n) {
+  activeTest = n;
+  // Update desktop sidebar buttons
+  [1, 2, 3].forEach(i => {
+    document.getElementById('btn-t' + i).classList.toggle('selected', i === n);
+  });
+  // Update mobile tab buttons
+  [1, 2, 3].forEach(i => {
+    document.getElementById('mob-btn-t' + i).classList.toggle('selected', i === n);
+  });
+  document.getElementById('active-mode').innerHTML =
+    '目前模式 Active: <strong>' + MODE_LABELS[n] + '</strong>';
+}
+
+function markModeTried(n) {
+  triedModes.add(n);
+  // Mark desktop button
+  document.getElementById('btn-t' + n).classList.add('tried');
+  // Mark mobile tab button
+  document.getElementById('mob-btn-t' + n).classList.add('tried');
+  if (triedModes.size === 3) {
+    setTimeout(showCompletionOverlay, 1200);
+  }
+}
+
+function showCompletionOverlay() {
+  document.getElementById('completion-overlay').classList.add('show');
+}
+
+function closeOverlay() {
+  document.getElementById('completion-overlay').classList.remove('show');
+}
+
+function openPromptSheet() {
+  document.getElementById('prompt-sheet').classList.add('open');
+  document.getElementById('sheet-overlay').classList.add('show');
+}
+
+function closePromptSheet() {
+  document.getElementById('prompt-sheet').classList.remove('open');
+  document.getElementById('sheet-overlay').classList.remove('show');
+}
+
+function askQuestion(idx) {
+  if (pendingTimeout) clearTimeout(pendingTimeout);
+
+  const btns = document.querySelectorAll('.prompt-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const spinner       = document.getElementById('spinner');
+  const responseText  = document.getElementById('response-text');
+  const responseImage = document.getElementById('response-image');
+  const delay         = delays[activeTest][idx];
+
+  const label = delay >= 30000
+    ? '這可能需要一些時間，請稍等… This may take a while…'
+    : '思考中 Thinking…';
+
+  spinner.style.display = 'flex';
+  document.getElementById('spinner-label').textContent = label;
+  responseText.style.display  = 'none';
+  responseImage.style.display = 'none';
+
+  // Scroll response box into view on mobile
+  document.getElementById('response-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  pendingTimeout = setTimeout(() => {
+    spinner.style.display = 'none';
+
+    if (responses[idx] === null) {
+      const imgEl     = document.getElementById('response-img-el');
+      const captionEl = document.getElementById('response-img-caption');
+      imgEl.src = IMAGE_PATH;
+      captionEl.textContent = latencySpeeds[activeTest][idx] + ' · ' + IMAGE_PATH;
+      responseImage.style.display = 'flex';
+    } else {
+      responseText.style.display    = 'block';
+      responseText.style.color      = '#1a1a1a';
+      responseText.style.whiteSpace = 'pre-wrap';
+      responseText.textContent = latencySpeeds[activeTest][idx] + '\n\n' + responses[idx];
+    }
+
+    btns.forEach(b => b.disabled = false);
+    markModeTried(activeTest);
+  }, delay);
+}
+
+selectTest(1);
+</script>
+</body>
+</html>
