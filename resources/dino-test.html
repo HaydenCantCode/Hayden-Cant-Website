@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DINO // LATENCY LAB｜延遲實驗室</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@400;700&display=swap');
+  body.zh { font-family: 'Noto Sans TC', 'Share Tech Mono', monospace; }
+ 
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --panel: #1a1a26;
+    --accent: #00ff88;
+    --accent2: #ff3366;
+    --accent3: #00ccff;
+    --text: #e0e0f0;
+    --muted: #555570;
+    --dino: #00ff88;
+    --obstacle: #ff3366;
+    --ground: #333350;
+  }
+ 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+ 
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+ 
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.2);
+    margin-bottom: 6px;
+  }
+ 
+  .subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+ 
+  /* ── Game wrapper ── */
+  .game-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+ 
+  /* ── Canvas area ── */
+  .canvas-container {
+    position: relative;
+    border: 1px solid var(--muted);
+    box-shadow: 0 0 30px rgba(0,255,136,0.08), inset 0 0 30px rgba(0,0,0,0.5);
+  }
+ 
+  canvas {
+    display: block;
+    background: var(--surface);
+  }
+ 
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,15,0.85);
+    gap: 16px;
+    transition: opacity 0.2s;
+  }
+ 
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+ 
+  .overlay-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+  }
+ 
+  .overlay-title.game-over { color: var(--accent2); text-shadow: 0 0 20px rgba(255,51,102,0.6); }
+  .overlay-title.start { color: var(--accent); text-shadow: 0 0 20px rgba(0,255,136,0.6); }
+ 
+  .overlay-score {
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+  }
+ 
+  .btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    padding: 10px 28px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+ 
+  .btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(0,255,136,0.4);
+  }
+ 
+  /* ── Side panel ── */
+  .side-panel {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+ 
+  .panel-box {
+    border: 1px solid var(--muted);
+    background: var(--panel);
+    padding: 14px 16px;
+  }
+ 
+  .panel-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(85,85,112,0.3);
+    padding-bottom: 6px;
+  }
+ 
+  /* Scores */
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+ 
+  .score-key {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+ 
+  .score-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(0,255,136,0.3);
+  }
+ 
+  .score-val.hi { color: var(--accent3); text-shadow: 0 0 10px rgba(0,204,255,0.3); }
+ 
+  /* Latency panel */
+  .latency-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--accent2);
+    text-shadow: 0 0 20px rgba(255,51,102,0.4);
+    text-align: center;
+    margin: 6px 0;
+    letter-spacing: 0.05em;
+  }
+ 
+  .latency-unit {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+ 
+  .latency-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+ 
+  .lat-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--muted);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+ 
+  .lat-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    box-shadow: 0 0 10px rgba(255,51,102,0.3);
+  }
+ 
+  .lat-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--muted);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    text-align: center;
+    outline: none;
+    min-width: 0;
+    transition: border-color 0.15s;
+  }
+ 
+  .lat-input:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 8px rgba(255,51,102,0.2);
+  }
+ 
+  .preset-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+ 
+  .preset-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    border: 1px solid var(--muted);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.05em;
+  }
+ 
+  .preset-btn:hover, .preset-btn.active {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+ 
+  /* Latency indicator bar */
+  .lat-bar-wrap {
+    height: 4px;
+    background: var(--surface);
+    border: 1px solid var(--muted);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+ 
+  .lat-bar {
+    height: 100%;
+    background: var(--accent2);
+    box-shadow: 0 0 8px rgba(255,51,102,0.6);
+    transition: width 0.2s;
+  }
+ 
+  /* Jump feedback */
+  .jump-flash {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-align: center;
+    height: 14px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    margin-top: 4px;
+  }
+ 
+  .jump-flash.show { opacity: 1; }
+ 
+  /* Stats */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 0.7rem;
+  }
+ 
+  .stat-key { color: var(--muted); letter-spacing: 0.1em; }
+  .stat-val { color: var(--text); }
+ 
+  /* Language toggle */
+  .lang-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1px solid var(--muted);
+    overflow: hidden;
+  }
+ 
+  .lang-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+ 
+  .lang-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+ 
+  .lang-btn:not(.active):hover {
+    color: var(--accent);
+  }
+ 
+  /* Bilingual label: English small above, Chinese main */
+  .panel-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(85,85,112,0.3);
+    padding-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+ 
+  .panel-label .zh {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: rgba(170,170,190,0.7);
+    display: none;
+    font-family: 'Share Tech Mono', sans-serif;
+  }
+ 
+  body.zh .panel-label .zh { display: block; }
+  body.zh .panel-label .en { display: none; }
+ 
+  /* score-key bilingual */
+  .score-key .zh, .stat-key .zh,
+  .latency-unit .zh, .jump-flash .zh,
+  .overlay-score .zh, .overlay-title .zh {
+    display: none;
+  }
+ 
+  body.zh .score-key .en, body.zh .stat-key .en,
+  body.zh .latency-unit .en, body.zh .jump-flash .en,
+  body.zh .overlay-score .en, body.zh .overlay-title.start .en,
+  body.zh .overlay-title.game-over .en,
+  body.zh .subtitle .en,
+  body.zh .btn .en {
+    display: none;
+  }
+ 
+  body.zh .score-key .zh, body.zh .stat-key .zh,
+  body.zh .latency-unit .zh, body.zh .jump-flash .zh,
+  body.zh .overlay-score .zh, body.zh .overlay-title.start .zh,
+  body.zh .overlay-title.game-over .zh,
+  body.zh .subtitle .zh,
+  body.zh .btn .zh {
+    display: inline;
+  }
+ 
+  /* Corner decorations on canvas */
+  .corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--accent);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .corner.tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .corner.tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+</style>
+</head>
+<body>
+ 
+<div class="lang-toggle">
+  <button class="lang-btn active" id="btnEn">EN</button>
+  <button class="lang-btn" id="btnZh">繁體中文</button>
+</div>
+ 
+<h1>DINO // LATENCY LAB</h1>
+<p class="subtitle">
+  <span class="en">Test your reactions against artificial input delay</span>
+  <span class="zh">測試你在人工輸入延遲下的反應</span>
+</p>
+ 
+<div class="game-wrapper">
+ 
+  <!-- Canvas -->
+  <div class="canvas-container">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <canvas id="gameCanvas" width="700" height="220"></canvas>
+ 
+    <!-- Start overlay -->
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-title start">
+        <span class="en">LATENCY LAB</span>
+        <span class="zh">延遲實驗室</span>
+      </div>
+      <div class="overlay-score">
+        <span class="en">Press SPACE or tap to begin</span>
+        <span class="zh">按空白鍵或點擊開始</span>
+      </div>
+      <button class="btn" id="startBtn">
+        <span class="en">START RUN</span>
+        <span class="zh">開始遊戲</span>
+      </button>
+    </div>
+ 
+    <!-- Game over overlay -->
+    <div class="overlay hidden" id="gameOverOverlay">
+      <div class="overlay-title game-over">
+        <span class="en">SIGNAL LOST</span>
+        <span class="zh">訊號中斷</span>
+      </div>
+      <div class="overlay-score" id="finalScore"></div>
+      <button class="btn" id="retryBtn">
+        <span class="en">RETRY</span>
+        <span class="zh">再試一次</span>
+      </button>
+    </div>
+  </div>
+ 
+  <!-- Side panel -->
+  <div class="side-panel">
+ 
+    <!-- Scores -->
+    <div class="panel-box">
+      <div class="panel-label">
+        <span class="en">Telemetry</span>
+        <span class="zh">遊戲數據</span>
+      </div>
+      <div class="score-row">
+        <span class="score-key">
+          <span class="en">Score</span>
+          <span class="zh">分數</span>
+        </span>
+        <span class="score-val" id="scoreDisplay">00000</span>
+      </div>
+      <div class="score-row">
+        <span class="score-key">
+          <span class="en">Best</span>
+          <span class="zh">最高分</span>
+        </span>
+        <span class="score-val hi" id="hiDisplay">00000</span>
+      </div>
+    </div>
+ 
+    <!-- Latency -->
+    <div class="panel-box">
+      <div class="panel-label">
+        <span class="en">Input Latency</span>
+        <span class="zh">輸入延遲</span>
+      </div>
+      <div class="latency-display" id="latencyDisplay">0</div>
+      <div class="latency-unit">
+        <span class="en">milliseconds</span>
+        <span class="zh">毫秒</span>
+      </div>
+ 
+      <div class="latency-controls">
+        <button class="lat-btn" id="decBtn">−</button>
+        <input class="lat-input" type="number" id="latInput" value="0" min="0" max="2000" step="10">
+        <button class="lat-btn" id="incBtn">+</button>
+      </div>
+ 
+      <div class="preset-row" id="presets">
+        <button class="preset-btn active" data-ms="0">0ms</button>
+        <button class="preset-btn" data-ms="50">50ms</button>
+        <button class="preset-btn" data-ms="100">100ms</button>
+        <button class="preset-btn" data-ms="150">150ms</button>
+        <button class="preset-btn" data-ms="200">200ms</button>
+        <button class="preset-btn" data-ms="500">500ms</button>
+      </div>
+ 
+      <div class="lat-bar-wrap">
+        <div class="lat-bar" id="latBar" style="width:0%"></div>
+      </div>
+ 
+      <div class="jump-flash" id="jumpFlash">
+        <span class="en">▲ JUMP QUEUED</span>
+        <span class="zh">▲ 跳躍已排隊</span>
+      </div>
+    </div>
+ 
+    <!-- Run stats -->
+    <div class="panel-box">
+      <div class="panel-label">
+        <span class="en">Run Stats</span>
+        <span class="zh">本局統計</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">
+          <span class="en">Speed</span>
+          <span class="zh">速度</span>
+        </span>
+        <span class="stat-val" id="speedStat">5.0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">
+          <span class="en">Obstacles</span>
+          <span class="zh">障礙物</span>
+        </span>
+        <span class="stat-val" id="obstStat">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">
+          <span class="en">Latency</span>
+          <span class="zh">延遲</span>
+        </span>
+        <span class="stat-val" id="latStat">0ms</span>
+      </div>
+    </div>
+ 
+  </div>
+</div>
+ 
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const CANVAS_W = 700;
+const CANVAS_H = 220;
+const GROUND_Y = 170;
+const GRAVITY   = 1800;
+const JUMP_V    = -620;
+const INIT_SPEED = 320;
+const SPEED_INC  = 18;   // per second
+const MAX_SPEED  = 900;
+ 
+// ── State ──────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+ 
+let state = 'idle'; // idle | playing | dead
+let score = 0;
+let hiscore = parseInt(localStorage.getItem('dinoHi') || '0');
+let gameSpeed = INIT_SPEED;
+let obstacles = [];
+let particles = [];
+let spawnTimer = 0;
+let obstacleCount = 0;
+let lastTime = 0;
+let animId;
+let latencyMs = 0;
+let jumpQueued = false;
+let jumpPending = false;  // space held tracking
+ 
+// Dino
+const dino = {
+  x: 80, y: GROUND_Y,
+  w: 36, h: 48,
+  vy: 0,
+  grounded: true,
+  legPhase: 0,
+};
+ 
+// ── Latency UI ─────────────────────────────────────────────────────────────
+const latInput    = document.getElementById('latInput');
+const latDisplay  = document.getElementById('latencyDisplay');
+const latBar      = document.getElementById('latBar');
+const latStat     = document.getElementById('latStat');
+const jumpFlash   = document.getElementById('jumpFlash');
+let flashTimer    = null;
+ 
+function setLatency(ms) {
+  ms = Math.max(0, Math.min(2000, Math.round(ms / 10) * 10));
+  latencyMs = ms;
+  latInput.value = ms;
+  latDisplay.textContent = ms;
+  latBar.style.width = Math.min(100, (ms / 500) * 100) + '%';
+  latStat.textContent = ms + 'ms';
+  // Update preset buttons
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.ms) === ms);
+  });
+}
+ 
+latInput.addEventListener('change', () => setLatency(parseInt(latInput.value) || 0));
+latInput.addEventListener('input',  () => {
+  const v = parseInt(latInput.value);
+  if (!isNaN(v)) setLatency(v);
+});
+document.getElementById('incBtn').addEventListener('click', () => setLatency(latencyMs + 25));
+document.getElementById('decBtn').addEventListener('click', () => setLatency(latencyMs - 25));
+document.querySelectorAll('.preset-btn').forEach(b => {
+  b.addEventListener('click', () => setLatency(parseInt(b.dataset.ms)));
+});
+ 
+function showJumpFlash() {
+  jumpFlash.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => jumpFlash.classList.remove('show'), latencyMs + 200);
+}
+ 
+// ── Language toggle ────────────────────────────────────────────────────────
+let currentLang = 'en';
+ 
+document.getElementById('btnEn').addEventListener('click', () => setLang('en'));
+document.getElementById('btnZh').addEventListener('click', () => setLang('zh'));
+ 
+function setLang(lang) {
+  currentLang = lang;
+  document.body.classList.toggle('zh', lang === 'zh');
+  document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+  document.getElementById('btnZh').classList.toggle('active', lang === 'zh');
+}
+ 
+ 
+function handleJumpPress() {
+  if (state === 'idle' || state === 'dead') {
+    startGame(); return;
+  }
+  if (!dino.grounded) return;
+  if (jumpQueued) return;
+  jumpQueued = true;
+  if (latencyMs <= 0) {
+    doJump();
+  } else {
+    showJumpFlash();
+    setTimeout(() => doJump(), latencyMs);
+  }
+}
+ 
+function doJump() {
+  if (!dino.grounded) { jumpQueued = false; return; }
+  dino.vy = JUMP_V;
+  dino.grounded = false;
+  jumpQueued = false;
+  spawnParticles(dino.x + dino.w/2, GROUND_Y + dino.h, '#00ff88', 6);
+}
+ 
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !e.repeat) { e.preventDefault(); handleJumpPress(); }
+});
+document.addEventListener('touchstart', e => { e.preventDefault(); handleJumpPress(); }, {passive:false});
+canvas.addEventListener('click', () => { if (state !== 'playing') handleJumpPress(); });
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('retryBtn').addEventListener('click', startGame);
+ 
+// ── Game flow ──────────────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  score = 0;
+  gameSpeed = INIT_SPEED;
+  obstacles = [];
+  particles = [];
+  spawnTimer = 0;
+  obstacleCount = 0;
+  jumpQueued = false;
+  dino.y = GROUND_Y;
+  dino.vy = 0;
+  dino.grounded = true;
+  dino.legPhase = 0;
+  state = 'playing';
+  lastTime = performance.now();
+  cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(loop);
+}
+ 
+function gameOver() {
+  state = 'dead';
+  if (score > hiscore) {
+    hiscore = score;
+    localStorage.setItem('dinoHi', hiscore);
+  }
+  updateScoreDisplay();
+  document.getElementById('finalScore').textContent = currentLang === 'zh'
+    ? `分數：${String(Math.floor(score)).padStart(5,'0')}　·　延遲：${latencyMs}毫秒`
+    : `SCORE: ${String(Math.floor(score)).padStart(5,'0')}  ·  LATENCY: ${latencyMs}ms`;
+  document.getElementById('gameOverOverlay').classList.remove('hidden');
+  spawnParticles(dino.x + dino.w/2, dino.y + dino.h/2, '#ff3366', 20);
+}
+ 
+// ── Spawn obstacles ────────────────────────────────────────────────────────
+const OBSTACLE_TYPES = [
+  { w:18, h:36, label:'S1' },
+  { w:28, h:36, label:'S2' },
+  { w:18, h:52, label:'T1' },
+  { w:36, h:36, label:'T2' },
+  { w:52, h:28, label:'B',  yOff: -60 }, // bird
+];
+ 
+function spawnObstacle() {
+  const t = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+  const yOff = t.yOff || 0;
+  obstacles.push({
+    x: CANVAS_W + 10,
+    y: GROUND_Y + yOff,
+    w: t.w, h: t.h,
+    isBird: !!t.yOff,
+    passed: false,
+  });
+  obstacleCount++;
+}
+ 
+function getSpawnInterval() {
+  // Spawn interval shrinks as speed increases
+  return Math.max(0.8, 2.2 - (gameSpeed - INIT_SPEED) / 400);
+}
+ 
+// ── Particles ──────────────────────────────────────────────────────────────
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 60 + Math.random() * 180;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 100,
+      life: 1,
+      decay: 1.5 + Math.random(),
+      size: 2 + Math.random() * 3,
+      color,
+    });
+  }
+}
+ 
+// ── Update ─────────────────────────────────────────────────────────────────
+function update(dt) {
+  // Speed up
+  gameSpeed = Math.min(MAX_SPEED, gameSpeed + SPEED_INC * dt);
+  score += gameSpeed * dt * 0.08;
+  updateScoreDisplay();
+ 
+  // Dino physics
+  if (!dino.grounded) {
+    dino.vy += GRAVITY * dt;
+    dino.y  += dino.vy * dt;
+    if (dino.y >= GROUND_Y) {
+      dino.y = GROUND_Y;
+      dino.vy = 0;
+      dino.grounded = true;
+      jumpQueued = false;
+    }
+  } else {
+    dino.legPhase += dt * 8;
+  }
+ 
+  // Spawn
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnObstacle();
+    spawnTimer = getSpawnInterval();
+  }
+ 
+  // Move obstacles
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    o.x -= gameSpeed * dt;
+    if (!o.passed && o.x + o.w < dino.x) {
+      o.passed = true;
+      spawnParticles(dino.x - 10, GROUND_Y - 10, '#00ccff', 4);
+    }
+    if (o.x + o.w < -10) { obstacles.splice(i, 1); continue; }
+    // Collision (AABB with small margin)
+    const margin = 6;
+    if (
+      dino.x + margin < o.x + o.w - margin &&
+      dino.x + dino.w - margin > o.x + margin &&
+      dino.y + margin < o.y + o.h &&
+      dino.y + dino.h - margin > o.y
+    ) {
+      gameOver(); return;
+    }
+  }
+ 
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x   += p.vx * dt;
+    p.y   += p.vy * dt;
+    p.vy  += 400 * dt;
+    p.life -= p.decay * dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+ 
+  // Stats
+  document.getElementById('speedStat').textContent = (gameSpeed / 100).toFixed(1);
+  document.getElementById('obstStat').textContent = obstacleCount;
+}
+ 
+// ── Draw ───────────────────────────────────────────────────────────────────
+const COLS = {
+  bg:      '#0e0e18',
+  ground:  '#333350',
+  groundL: '#00ff8822',
+  dino:    '#00ff88',
+  dinoD:   '#009955',
+  obs:     '#ff3366',
+  obsD:    '#aa1133',
+  bird:    '#ff9933',
+  birdD:   '#cc6600',
+};
+ 
+function draw() {
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+ 
+  // Background grid
+  ctx.strokeStyle = 'rgba(51,51,80,0.25)';
+  ctx.lineWidth = 0.5;
+  const gridSize = 40;
+  for (let x = 0; x < CANVAS_W; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CANVAS_H); ctx.stroke();
+  }
+  for (let y = 0; y < CANVAS_H; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CANVAS_W,y); ctx.stroke();
+  }
+ 
+  // Ground line
+  ctx.strokeStyle = COLS.ground;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND_Y + dino.h);
+  ctx.lineTo(CANVAS_W, GROUND_Y + dino.h);
+  ctx.stroke();
+ 
+  // Ground glow
+  const grad = ctx.createLinearGradient(0, GROUND_Y + dino.h, 0, CANVAS_H);
+  grad.addColorStop(0, 'rgba(0,255,136,0.06)');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, GROUND_Y + dino.h, CANVAS_W, CANVAS_H - GROUND_Y - dino.h);
+ 
+  // Particles
+  particles.forEach(p => {
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+  });
+  ctx.globalAlpha = 1;
+ 
+  // Obstacles
+  obstacles.forEach(o => {
+    if (o.isBird) {
+      drawBird(o);
+    } else {
+      drawCactus(o);
+    }
+  });
+ 
+  // Dino
+  drawDino();
+ 
+  // Latency indicator (queued jump countdown)
+  if (jumpQueued && latencyMs > 0) {
+    ctx.fillStyle = 'rgba(255,51,102,0.15)';
+    ctx.fillRect(dino.x - 4, dino.y - 4, dino.w + 8, dino.h + 8);
+    ctx.strokeStyle = '#ff3366';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.strokeRect(dino.x - 4, dino.y - 4, dino.w + 8, dino.h + 8);
+    ctx.setLineDash([]);
+  }
+}
+ 
+function drawDino() {
+  const x = dino.x, y = dino.y;
+  const w = dino.w, h = dino.h;
+  const c = COLS.dino, cd = COLS.dinoD;
+ 
+  // Shadow
+  ctx.fillStyle = 'rgba(0,255,136,0.08)';
+  ctx.fillRect(x - 4, GROUND_Y + h - 2, w + 8, 4);
+ 
+  // Body
+  ctx.fillStyle = c;
+  ctx.fillRect(x + 4, y + 8, w - 8, h - 20);
+ 
+  // Head
+  ctx.fillStyle = c;
+  ctx.fillRect(x + 8, y, w - 6, 18);
+ 
+  // Eye
+  ctx.fillStyle = COLS.bg;
+  ctx.fillRect(x + w - 10, y + 4, 5, 5);
+  ctx.fillStyle = cd;
+  ctx.fillRect(x + w - 9, y + 5, 3, 3);
+ 
+  // Tail
+  ctx.fillStyle = cd;
+  ctx.fillRect(x, y + h - 28, 8, 12);
+ 
+  // Legs
+  const leg = dino.grounded ? Math.sin(dino.legPhase) : 0;
+  ctx.fillStyle = cd;
+  ctx.fillRect(x + 6,  y + h - 14 + (leg > 0 ? 4 : 0),  8, 14 + (leg > 0 ? -4 : 0));
+  ctx.fillRect(x + 18, y + h - 14 + (leg < 0 ? 4 : 0),  8, 14 + (leg < 0 ? -4 : 0));
+ 
+  // Arm
+  ctx.fillStyle = cd;
+  ctx.fillRect(x + w - 8, y + 14, 6, 6);
+ 
+  // Pixel highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fillRect(x + 8, y, 4, 4);
+}
+ 
+function drawCactus(o) {
+  const x = o.x, y = o.y, w = o.w, h = o.h;
+  const c = COLS.obs, cd = COLS.obsD;
+ 
+  // Shadow
+  ctx.fillStyle = 'rgba(255,51,102,0.08)';
+  ctx.fillRect(x - 2, GROUND_Y + dino.h - 2, w + 4, 4);
+ 
+  // Main trunk
+  ctx.fillStyle = c;
+  ctx.fillRect(x + Math.floor(w/2) - 5, y, 10, h);
+ 
+  // Arms
+  if (w > 20) {
+    ctx.fillStyle = cd;
+    ctx.fillRect(x, y + 12, Math.floor(w/2) - 4, 7);
+    ctx.fillRect(x + Math.floor(w/2) + 4, y + 18, Math.ceil(w/2) - 4, 7);
+    ctx.fillStyle = c;
+    ctx.fillRect(x, y + 5, 7, 14);
+    ctx.fillRect(x + w - 7, y + 11, 7, 14);
+  }
+ 
+  // Highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillRect(x + Math.floor(w/2) - 5, y, 3, h);
+}
+ 
+function drawBird(o) {
+  const x = o.x, y = o.y, w = o.w, h = o.h;
+  const c = COLS.bird, cd = COLS.birdD;
+  const flap = Math.sin(performance.now() * 0.01) > 0;
+ 
+  ctx.fillStyle = c;
+  ctx.fillRect(x + 10, y + 6, w - 20, h - 6);
+  ctx.fillRect(x + w - 14, y + 4, 10, 8); // head
+  ctx.fillStyle = cd;
+  if (flap) {
+    ctx.fillRect(x, y, 14, 8);
+    ctx.fillRect(x + w - 14, y, 14, 8);
+  } else {
+    ctx.fillRect(x, y + 10, 14, 6);
+    ctx.fillRect(x + w - 14, y + 10, 14, 6);
+  }
+  // eye
+  ctx.fillStyle = COLS.bg;
+  ctx.fillRect(x + w - 10, y + 5, 3, 3);
+}
+ 
+// ── Score display ──────────────────────────────────────────────────────────
+function updateScoreDisplay() {
+  document.getElementById('scoreDisplay').textContent =
+    String(Math.floor(score)).padStart(5, '0');
+  document.getElementById('hiDisplay').textContent =
+    String(Math.floor(hiscore)).padStart(5, '0');
+}
+ 
+// ── Main loop ──────────────────────────────────────────────────────────────
+function loop(ts) {
+  if (state !== 'playing') return;
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  update(dt);
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+ 
+// ── Idle draw ──────────────────────────────────────────────────────────────
+function idleDraw() {
+  if (state !== 'idle' && state !== 'dead') return;
+  draw();
+  requestAnimationFrame(idleDraw);
+}
+ 
+// Init
+updateScoreDisplay();
+setLatency(0);
+idleDraw();
+</script>
+</body>
+</html>
+ 
